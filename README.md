@@ -8,7 +8,7 @@ El proyecto está organizado de la siguiente manera:
 
 ```
 ChromeTranslate
-├── src
+├── ChromeTranslate
 |   ├── images
 │   ├── background.js        # Script de fondo que maneja eventos y el menú contextual.
 │   ├── content.js          # Inyecta en las páginas web y reemplaza el texto con la traducción.
