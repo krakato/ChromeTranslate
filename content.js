@@ -1,33 +1,35 @@
-import { translateText } from './utils/translator.js';
+let lastElementUnderCursor = null;
 
 document.addEventListener('contextmenu', function(event) {
-    event.preventDefault();
-    
-    const targetElement = event.target;
+    lastElementUnderCursor = event.target;
+});
 
-    if (targetElement && targetElement.innerText) {
-        const menu = document.createElement('div');
-        menu.style.position = 'absolute';
-        menu.style.top = `${event.clientY}px`;
-        menu.style.left = `${event.clientX}px`;
-        menu.style.backgroundColor = 'white';
-        menu.style.border = '1px solid black';
-        menu.style.zIndex = '1000';
-        menu.innerText = 'Traducir elemento';
-        
-        menu.addEventListener('click', async function() {
-            const originalText = targetElement.innerText;
-            const translatedText = await translateText(originalText, 'es'); // 'es' para español
-            targetElement.innerText = translatedText;
-            document.body.removeChild(menu);
-        });
-
-        document.body.appendChild(menu);
-
-        document.addEventListener('click', function() {
-            if (document.body.contains(menu)) {
-                document.body.removeChild(menu);
+function translateText(text, targetLanguage) {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(text)}`;
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la traducción');
             }
-        }, { once: true });
+            return response.json();
+        })
+        .then(data => {
+            // El texto traducido está en data[0][0][0]
+            return data[0][0][0];
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            return text; // Retorna el texto original en caso de error
+        });
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "translate" && lastElementUnderCursor) { // <-- Cambiado aquí
+    if (lastElementUnderCursor && lastElementUnderCursor.innerText) {
+      const originalText = lastElementUnderCursor.innerText;
+      translateText(originalText, 'es').then(translated => {
+        lastElementUnderCursor.innerText = translated;
+      });
     }
+  }
 });
