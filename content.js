@@ -24,12 +24,18 @@ function translateText(text, targetLanguage) {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "translate" && lastElementUnderCursor) { // <-- Cambiado aquí
-    if (lastElementUnderCursor && lastElementUnderCursor.innerText) {
-      const originalText = lastElementUnderCursor.innerText;
-      translateText(originalText, 'es').then(translated => {
-        lastElementUnderCursor.innerText = translated;
-      });
+  if (request.action === "translate" && lastElementUnderCursor) {
+    try {
+      if (lastElementUnderCursor && lastElementUnderCursor.innerText) {
+        const originalText = lastElementUnderCursor.innerText;
+        translateText(originalText, 'es').then(translated => {
+          lastElementUnderCursor.innerText = translated;
+        }).catch(error => {
+          console.error('Error al traducir:', error);
+        });
+      }
+    } catch (error) {
+      console.error('Error al seleccionar el elemento:', error);
     }
   }
 });

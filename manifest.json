@@ -3,7 +3,7 @@
   "name": "Translate Extension",
   "version": "2.0",
   "author": "GoldFinger",
-  "description": "Extensión para traducir texto en etiquetas HTML al pasar el puntero y hacer clic derecho.",
+  "description": "Extensión para traducir texto en etiquetas HTML al pasar el puntero y hacer clic derecho. Usamos Google Traductor para traducir.",
   "permissions": [
     "contextMenus",
     "activeTab",
@@ -22,12 +22,14 @@
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "images/icon16.png",
+      "32": "images/icon32.png",
       "48": "images/icon48.png",
       "128": "images/icon128.png"
     }
   },
   "icons": {
     "16": "images/icon16.png",
+    "32": "images/icon32.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   }
