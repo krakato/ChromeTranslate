@@ -26,9 +26,12 @@ function translateText(text, targetLanguage) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "translate" && lastElementUnderCursor) {
     try {
+      const browserLanguage = chrome.i18n.getUILanguage();
+      const shortLang = browserLanguage.split('-')[0]; // "es" si es "es-ES"
+      // Verifica si el elemento tiene texto
       if (lastElementUnderCursor && lastElementUnderCursor.innerText) {
         const originalText = lastElementUnderCursor.innerText;
-        translateText(originalText, 'es').then(translated => {
+        translateText(originalText, shortLang).then(translated => {
           lastElementUnderCursor.innerText = translated;
         }).catch(error => {
           console.error('Error al traducir:', error);
