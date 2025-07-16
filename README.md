@@ -13,9 +13,8 @@ ChromeTranslate
 │   ├── background.js        # Script de fondo que maneja eventos y el menú contextual.
 │   ├── content.js          # Inyecta en las páginas web y reemplaza el texto con la traducción.
 │   ├── popup
-│   │   └── popup.js        # Lógica del popup de la extensión (opcional).
-│   ├── utils
-│   │   └── translator.js    # Funciones para interactuar con la API de Google Translate.
+│   │   └── popup.js        # Lógica del popup de la extensión (opcional).   
+│   │   └── popup.html       # popup.html de la extensión (opcional).   
 │   └── manifest.json        # Configuración de la extensión de Chrome.
 └── README.md                # Documentación del proyecto.
 ```
@@ -36,4 +35,4 @@ ChromeTranslate
 Las contribuciones son bienvenidas. Si deseas mejorar esta extensión, por favor abre un issue o envía un pull request.
 
 ## Licencia
-Este proyecto está bajo la Licencia MIT. Goldfinger
+Este proyecto está bajo la Licencia Copyleft (GPL). Goldfinger
