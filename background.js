@@ -7,5 +7,12 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  chrome.tabs.sendMessage(tab.id, { action: "translate" });
+  if (info.menuItemId === "translate") {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        chrome.runtime.sendMessage({ action: "translate" });
+      }
+    });
+  }
 });

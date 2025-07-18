@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Translate Extension</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      h2 {
+<head>   
+  <title>Translate Extension</title>
+  <style>
+    body { font-family: Arial, sans-serif; width: 250px; padding: 10px; }
+    #output { margin-top: 5px; white-space: pre-wrap; font-size: large;}
+    h2 {
       color: #1d63b3;
-      font-size: 24px;
-      margin-bottom: 15px;
-      }
-
-      p {
-      color: #666;
       font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      color: #666;
+      font-size: 14px;
       margin-bottom: 20px;
-      }      
-    </style>
-  </head>
-  <body>
-    <h2>Extensión de Traducción</h2>
-    <p>Haz clic derecho sobre el texto para traducir.</p>
-    <p>La traducción se aplicará al párrafo que hay bajo el cursor</p>
-    <p>Por ahora solamente traduce al español.</p>
-  </body>
+    }
+  </style>
+</head>
+<body>
+  <h2>Extensi&oacute;n de Traducci&oacute;n</h2>
+  <p>Haz clic derecho sobre el texto para traducir. Selecciona texto y velo traducido aqu&iacute;</p>
+  <div id="status">Traduciendo...</div>
+  <div id="output"></div>
+  <script src="popup.js"></script>
+</body>
 </html>

@@ -22,14 +22,14 @@ function translateText(text, targetLanguage) {
             return text; // Retorna el texto original en caso de error
         });
 }
-
+//Escucha mensajes enviados desde el popup, content script o background script de la extensión de Chrome.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "translate" && lastElementUnderCursor) {
     try {
       const browserLanguage = chrome.i18n.getUILanguage();
       const shortLang = browserLanguage.split('-')[0];
 
-      // Busca el elemento padre (por ejemplo, el primer div, section o article)
+      // Busca el elemento padre (por ejemplo, el primer div, section o article) hacia arriba del elemento bajo el cursor
       let parent = lastElementUnderCursor.closest('div, section, article');
       if (!parent) parent = lastElementUnderCursor; // Si no hay padre, usa el propio elemento
 
