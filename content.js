@@ -85,39 +85,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Función para mostrar el botón de restaurar
 function showRestoreButton(event) {
-  const el = event.currentTarget;
-  if (el.querySelector('.restore-original-btn')) return; // Ya existe
-  const btn = document.createElement('button');
-  btn.textContent = '↩️';
-  btn.title = 'Restaurar texto original';
-  btn.className = 'restore-original-btn';
-  btn.style.marginLeft = '6px';
-  btn.style.fontSize = '12px';
-  btn.style.cursor = 'pointer';
-  btn.style.background = 'transparent';
-  btn.style.border = 'none';
-  btn.style.padding = '0';
-  btn.style.verticalAlign = 'middle';
-  btn.onclick = function(e) {
+  const actTarget = event.currentTarget;
+  if (actTarget.querySelector('.restore-original-btn')) return; // Ya existe
+  const btnOrigin = document.createElement('button');
+  btnOrigin.textContent = '↩️';
+  btnOrigin.title = 'Restaurar texto original';
+  btnOrigin.className = 'restore-original-btn';
+  btnOrigin.style.marginLeft = '6px';
+  btnOrigin.style.fontSize = '12px';
+  btnOrigin.style.cursor = 'pointer';
+  btnOrigin.style.background = 'transparent';
+  btnOrigin.style.border = 'none';
+  btnOrigin.style.padding = '0';
+  btnOrigin.style.verticalAlign = 'middle';
+  btnOrigin.onclick = function(e) {
     e.stopPropagation();
     e.preventDefault();
-    const original = el.getAttribute('data-original-text');
-    if (original) {
-      el.textContent = original;
-      el.removeAttribute('data-original-text');
-      btn.remove();
-      el.removeEventListener('mouseenter', showRestoreButton);
-      el.removeEventListener('mouseleave', hideRestoreButton);
+    const originalText = actTarget.getAttribute('data-original-text');
+    if (originalText) {
+      actTarget.textContent = originalText;
+      actTarget.removeAttribute('data-original-text');
+      btnOrigin.remove();
+      actTarget.removeEventListener('mouseenter', showRestoreButton);
+      actTarget.removeEventListener('mouseleave', hideRestoreButton);
     }
   };
-  el.appendChild(btn);
+  actTarget.appendChild(btnOrigin);
 }
 
 // Función para ocultar el botón de restaurar
 function hideRestoreButton(event) {
-  const el = event.currentTarget;
-  const btn = el.querySelector('.restore-original-btn');
-  if (btn) btn.remove();
+  const evenTarget = event.currentTarget;
+  const btnRestaur = evenTarget.querySelector('.restore-original-btn');
+  if (btnRestaur) btnRestaur.remove();
 }
 
 // Agrega el CSS para el indicador visual de traducción
