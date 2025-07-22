@@ -30,6 +30,7 @@ ChromeTranslate
 2. Sitúa el cursor sobre el texto que deseas traducir.
 3. Haz clic derecho y selecciona "Traducir elemento" en el menú contextual.
 4. El texto del elemento HTML se reemplazará con su traducción.
+5. La traducción se puede revertir con el boton azul ↩️ que aparece cuando pasas el mouse sobre el texto traducido.
 
 ## Contribuciones
 Las contribuciones son bienvenidas. Si deseas mejorar esta extensión, por favor abre un issue o envía un pull request.
