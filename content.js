@@ -4,7 +4,13 @@ document.addEventListener('contextmenu', function(event) {
     lastElementUnderCursor = event.target;
 });
 
+const translationCache = {};
+
 function translateText(text, targetLanguage) {
+    const cacheKey = `${text}_${targetLanguage}`;
+    if (translationCache[cacheKey]) {
+        return Promise.resolve(translationCache[cacheKey]);
+    }
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(text)}`;
     return fetch(url)
         .then(response => {
@@ -15,7 +21,9 @@ function translateText(text, targetLanguage) {
         })
         .then(data => {
             // El texto traducido está en data[0][0][0]
-            return data[0][0][0];
+            const translated = data[0][0][0];
+            translationCache[cacheKey] = translated;
+            return translated;
         })
         .catch(error => {
             console.error('Error:', error);
@@ -40,17 +48,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       tags.forEach(tag => {
         const originalText = tag.textContent;
         if (originalText.trim()) {
+          tag.classList.add('translating-chrome-ext'); // Indicador visual
+          // Guardar el texto original en un atributo
+          tag.setAttribute('data-original-text', originalText);
           const promise = translateText(originalText, shortLang).then(translated => {
             tag.textContent = translated;
+            tag.classList.remove('translating-chrome-ext'); // Quitar indicador
+            // Agregar botón de restaurar al pasar el mouse
+            tag.addEventListener('mouseenter', showRestoreButton);
+            tag.addEventListener('mouseleave', hideRestoreButton);
           });
           promises.push(promise);
-        }
+        } 
       });
 
       // Si no hay tags hijos, traduce el propio padre
       if (tags.length === 0 && parent.innerText.trim()) {
+        parent.classList.add('translating-chrome-ext'); // Indicador visual
+        parent.setAttribute('data-original-text', parent.innerText);
         translateText(parent.innerText, shortLang).then(translated => {
-          parent.innerHTML = translated;
+          parent.textContent = translated; // Usar textContent en vez de innerHTML
+          parent.classList.remove('translating-chrome-ext'); // Quitar indicador
+          parent.addEventListener('mouseenter', showRestoreButton);
+          parent.addEventListener('mouseleave', hideRestoreButton);
         });
       } else {
         Promise.all(promises).then(() => {
@@ -62,3 +82,55 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   }
 });
+
+// Función para mostrar el botón de restaurar
+function showRestoreButton(event) {
+  const el = event.currentTarget;
+  if (el.querySelector('.restore-original-btn')) return; // Ya existe
+  const btn = document.createElement('button');
+  btn.textContent = '↩️';
+  btn.title = 'Restaurar texto original';
+  btn.className = 'restore-original-btn';
+  btn.style.marginLeft = '6px';
+  btn.style.fontSize = '12px';
+  btn.style.cursor = 'pointer';
+  btn.style.background = 'transparent';
+  btn.style.border = 'none';
+  btn.style.padding = '0';
+  btn.style.verticalAlign = 'middle';
+  btn.onclick = function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const original = el.getAttribute('data-original-text');
+    if (original) {
+      el.textContent = original;
+      el.removeAttribute('data-original-text');
+      btn.remove();
+      el.removeEventListener('mouseenter', showRestoreButton);
+      el.removeEventListener('mouseleave', hideRestoreButton);
+    }
+  };
+  el.appendChild(btn);
+}
+
+// Función para ocultar el botón de restaurar
+function hideRestoreButton(event) {
+  const el = event.currentTarget;
+  const btn = el.querySelector('.restore-original-btn');
+  if (btn) btn.remove();
+}
+
+// Agrega el CSS para el indicador visual de traducción
+(function() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .translating-chrome-ext {
+      background-color: #fff3b0 !important;
+      border: 2px solid #e0c141ff !important;
+      border-radius: 4px !important;
+      opacity: 0.7 !important;
+      transition: background-color 0.3s, opacity 0.3s;
+    }
+  `;
+  document.head.appendChild(style);
+})();
