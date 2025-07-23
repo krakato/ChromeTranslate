@@ -6,29 +6,24 @@ document.addEventListener('contextmenu', function(event) {
 
 const translationCache = {};
 
-function translateText(text, targetLanguage) {
+// Cambiado a función async
+async function translateText(text, targetLanguage) {
     const cacheKey = `${text}_${targetLanguage}`;
     if (translationCache[cacheKey]) {
-        return Promise.resolve(translationCache[cacheKey]);
+        return translationCache[cacheKey];
     }
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(text)}`;
-    return fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la traducción');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // El texto traducido está en data[0][0][0]
-            const translated = data[0][0][0];
-            translationCache[cacheKey] = translated;
-            return translated;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            return text; // Retorna el texto original en caso de error
-        });
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Error en la traducción');
+        const data = await response.json();
+        const translated = data[0][0][0];
+        translationCache[cacheKey] = translated;
+        return translated;
+    } catch (error) {
+        console.error('Error:', error);
+        return text;
+    }
 }
 //Escucha mensajes enviados desde el popup, content script o background script de la extensión de Chrome.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -51,23 +46,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           tag.classList.add('translating-chrome-ext'); // Indicador visual
           // Guardar el texto original en un atributo
           tag.setAttribute('data-original-text', originalText);
+          tag.setAttribute('data-original-html', tag.innerHTML);
+          if (tag.getAttribute('data-translated') === 'true') {
+            tag.classList.remove('translating-chrome-ext'); // Quitar indicador
+            return;
+          }
           const promise = translateText(originalText, shortLang).then(translated => {
             tag.textContent = translated;
+            tag.setAttribute('data-translated', 'true');
             tag.classList.remove('translating-chrome-ext'); // Quitar indicador
             // Agregar botón de restaurar al pasar el mouse
             tag.addEventListener('mouseenter', showRestoreButton);
             tag.addEventListener('mouseleave', hideRestoreButton);
           });
           promises.push(promise);
-        } 
+        }
       });
 
       // Si no hay tags hijos, traduce el propio padre
       if (tags.length === 0 && parent.innerText.trim()) {
+        if (parent.getAttribute('data-translated') === 'true') {
+          return;
+        }
         parent.classList.add('translating-chrome-ext'); // Indicador visual
         parent.setAttribute('data-original-text', parent.innerText);
+        parent.setAttribute('data-original-html', parent.innerHTML);
         translateText(parent.innerText, shortLang).then(translated => {
           parent.textContent = translated; // Usar textContent en vez de innerHTML
+          parent.setAttribute('data-translated', 'true');
           parent.classList.remove('translating-chrome-ext'); // Quitar indicador
           parent.addEventListener('mouseenter', showRestoreButton);
           parent.addEventListener('mouseleave', hideRestoreButton);
@@ -102,9 +108,12 @@ function showRestoreButton(event) {
     e.stopPropagation();
     e.preventDefault();
     const originalText = actTarget.getAttribute('data-original-text');
-    if (originalText) {
-      actTarget.textContent = originalText;
+    const originalHTML = actTarget.getAttribute('data-original-html');
+    if (originalHTML) {
+      actTarget.innerHTML = originalHTML;
       actTarget.removeAttribute('data-original-text');
+      actTarget.removeAttribute('data-original-html');
+      actTarget.removeAttribute('data-translated');
       btnOrigin.remove();
       actTarget.removeEventListener('mouseenter', showRestoreButton);
       actTarget.removeEventListener('mouseleave', hideRestoreButton);
