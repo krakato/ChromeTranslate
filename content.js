@@ -72,21 +72,76 @@ function handleMouseLeaveRestoreBtn(e) {
 // --- Traducción de elementos ---
 async function translateElementAndChildren(element, targetLanguage) {
   // Selecciona los tags relevantes dentro del elemento
-  const tags = element.querySelectorAll('p, a, div, i, b, span, h1, h2, h3, h4, h5, h6');
-  const elementsToTranslate = tags.length ? Array.from(tags) : [element];
-  const promises = elementsToTranslate.map(async tag => {
-    const originalText = tag.textContent;
-    if (!originalText.trim() || isTranslated(tag)) return;
-    tag.classList.add('translating-chrome-ext');
-    setOriginalAttributes(tag, originalText, tag.innerHTML);
-    const translated = await translateText(originalText, targetLanguage);
-    tag.textContent = translated;
-    markTranslated(tag);
-    tag.classList.remove('translating-chrome-ext');
-    tag.addEventListener('mouseenter', handleMouseEnterRestoreBtn);
-    tag.addEventListener('mouseleave', handleMouseLeaveRestoreBtn);
-  });
-  await Promise.all(promises);
+  const tags = element.querySelectorAll('*');
+  if (tags.length) {
+    // Traducir todos los hijos relevantes
+    const promises = Array.from(tags).map(async tag => {
+      const originalText = tag.textContent;
+      if (!originalText.trim() || isTranslated(tag)) return;
+      tag.classList.add('translating-chrome-ext');
+      setOriginalAttributes(tag, originalText, tag.innerHTML);
+      const translated = await translateText(originalText, targetLanguage);
+      tag.textContent = translated;
+      markTranslated(tag);
+      tag.classList.remove('translating-chrome-ext');
+      tag.addEventListener('mouseenter', handleMouseEnterRestoreBtn);
+      tag.addEventListener('mouseleave', handleMouseLeaveRestoreBtn);
+    });
+    await Promise.all(promises);
+  } else if (element.innerText && element.innerText.trim()) {
+    // Si no hay hijos relevantes, traducir el texto completo del elemento principal
+    if (isTranslated(element)) return;
+    element.classList.add('translating-chrome-ext');
+    setOriginalAttributes(element, element.innerText, element.innerHTML);
+    const translated = await translateText(element.innerText, targetLanguage);
+    element.textContent = translated;
+    markTranslated(element);
+    element.classList.remove('translating-chrome-ext');
+    element.addEventListener('mouseenter', handleMouseEnterRestoreBtn);
+    element.addEventListener('mouseleave', handleMouseLeaveRestoreBtn);
+  }
+}
+
+// --- Traducción recursiva de nodos de texto ---
+async function translateTextNodesRecursively(element, targetLanguage) {
+  // Función auxiliar recursiva
+  async function translateNode(node) {
+    if (node.nodeType === 3) { // Nodo de texto
+      const originalText = node.textContent;
+      if (originalText.trim() && node.parentElement) {
+        // Guardar el original solo una vez por elemento
+        if (!node.parentElement.hasAttribute('data-original-html')) {
+          setOriginalAttributes(node.parentElement, node.parentElement.innerText, node.parentElement.innerHTML);
+        }
+        const translated = await translateText(originalText, targetLanguage);
+        node.textContent = translated;
+        // Marcar el padre como traducido y poner botón si no lo tiene
+        if (!isTranslated(node.parentElement)) {
+          markTranslated(node.parentElement);
+          node.parentElement.addEventListener('mouseenter', handleMouseEnterRestoreBtn);
+          node.parentElement.addEventListener('mouseleave', handleMouseLeaveRestoreBtn);
+        }
+      }
+    } else if (node.nodeType === 1) { // Nodo elemento
+      // Procesar todos los hijos de este elemento
+      for (let i = 0; i < node.childNodes.length; i++) {
+        await translateNode(node.childNodes[i]);
+      }
+    }
+  }
+  await translateNode(element);
+  // Si el elemento raíz no tiene texto propio, limpiar atributos
+  if (element.nodeType === 1) {
+    const hasOwnText = Array.from(element.childNodes).some(n => n.nodeType === 3 && n.textContent.trim());
+    if (!hasOwnText) {
+      clearOriginalAttributes(element);
+      element.removeEventListener('mouseenter', handleMouseEnterRestoreBtn);
+      element.removeEventListener('mouseleave', handleMouseLeaveRestoreBtn);
+      element.classList.remove('translating-chrome-ext');
+      element.removeAttribute('data-translated');
+    }
+  }
+  element.classList.remove('translating-chrome-ext');
 }
 
 // --- Gestión del último elemento bajo el cursor ---
@@ -102,7 +157,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const browserLanguage = chrome.i18n.getUILanguage();
       const shortLang = browserLanguage.split('-')[0];
       let parent = lastElementUnderCursor.closest('div, section, article') || lastElementUnderCursor;
-      translateElementAndChildren(parent, shortLang);
+      parent.classList.add('translating-chrome-ext');
+      translateTextNodesRecursively(parent, shortLang);
     } catch (error) {
       console.error('Error al seleccionar el elemento:', error);
     }
