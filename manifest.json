@@ -28,7 +28,7 @@
     }
   ],
   "action": {
-    "default_title": "Translate simple",
+    "default_title": "Translate",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "images/icon16.png",
