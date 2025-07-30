@@ -7,11 +7,14 @@
   "permissions": [
     "contextMenus",
     "activeTab",
-    "scripting"
+    "scripting",
+    "cookies",
+    "tabs"
   ],
     "host_permissions": [
         "*://translate.google.com/*",
-        "*://translate.googleapis.com/*"
+        "*://translate.googleapis.com/*",
+        "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
